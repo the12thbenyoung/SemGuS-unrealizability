@@ -1,0 +1,4 @@
+*.class
+parser/semgus-parser
+*.jar
+
