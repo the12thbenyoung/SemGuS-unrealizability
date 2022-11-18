@@ -1,9 +1,7 @@
 build:
-	javac -cp .:lib/json-parser.jar src/ParseTest.java
-
+	mvn package
 run:
-	java src/ParseTest
-
+	java -cp target/semgus_unrealizability-1.0-SNAPSHOT.jar edu.wisc.semgus.App
 all:
-	javac -cp .:lib/json-parser.jar src/ParseTest.java
-	java src/ParseTest
+	mvn package
+	java -cp target/semgus_unrealizability-1.0-SNAPSHOT.jar edu.wisc.semgus.App

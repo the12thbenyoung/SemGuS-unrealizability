@@ -1,3 +1,4 @@
+package edu.wisc.semgus;
 public class Equation<E> {
     public String left;
     public Expression<E> right;

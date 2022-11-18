@@ -102,26 +102,26 @@
 ;;;
 ;;; Function to synthesize - a term rooted at E
 ;;;
-(synth-fun eq1() E)
-;    ((Start E) (C E) (StartBool B)) (
-;        (Start E (
-;            $x 
-;            $y 
-;            ($+ C C) ; Need to do this to get 2. Could also add $2 to grammar
-;            ($+ Start Start)
-;            ($ite StartBool Start Start)
-;        ))
-;        (C E (
-;            $1
-;        ))
-;        (StartBool B (
-;            ($not StartBool)
-;            ($or StartBool StartBool)
-;            ($and StartBool StartBool)
-;            ($>= Start Start)
-;        ))
-;    )
-;)
+(synth-fun eq1() E
+    ((Start E) (C E) (StartBool B)) (
+        (Start E (
+            $x 
+            $y 
+            ($+ C C) ; Need to do this to get 2. Could also add $2 to grammar
+            ($+ Start Start)
+            ($ite StartBool Start Start)
+        ))
+        (C E (
+            $1
+        ))
+        (StartBool B (
+            ($not StartBool)
+            ($or StartBool StartBool)
+            ($and StartBool StartBool)
+            ($>= Start Start)
+        ))
+    )
+)
 
 ;;;
 ;;; Constraints - examples

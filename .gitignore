@@ -1,4 +1,6 @@
 *.class
 parser/semgus-parser
 *.jar
-
+src/test/*
+target/*
+.idea/
