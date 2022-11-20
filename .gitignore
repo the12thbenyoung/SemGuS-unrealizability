@@ -4,3 +4,4 @@ parser/semgus-parser
 src/test/*
 target/*
 .idea/
+.vscode/

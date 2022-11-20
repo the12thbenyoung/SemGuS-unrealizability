@@ -1,7 +1,7 @@
-/* Modified from original Nay solver
+/* Modified from implementation of Nay. Artifacts at
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
-package edu.wisc.semgus;
+package edu.wisc.semgus.utilities;
 
 import javax.management.RuntimeErrorException;
 
