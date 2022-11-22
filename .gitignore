@@ -5,3 +5,5 @@ src/test/*
 target/*
 .idea/
 .vscode/
+lib/
+src/main/java/edu/wisc/semgus/parser/cvc5_test.java

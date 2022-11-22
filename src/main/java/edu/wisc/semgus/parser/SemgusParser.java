@@ -42,8 +42,19 @@ public class SemgusParser {
                 // Types (int or bool) of each background nonterminal is stored as last argument type in declare-function
                 case "declare-function":
                     JsonNode argumentSorts = node.get("rank").get("argumentSorts");
-                    universeNTTypes.put(argumentSorts.get(0).asText(), 
-                                        argumentSorts.get(argumentSorts.size()-1).asText().equals("Int") ? EqType.INT : EqType.BOOL);
+                    // For CLIA, return type (type of r) must be Int or Bool
+                    EqType return_type;
+                    switch (argumentSorts.get(argumentSorts.size()-1).asText()) {
+                        case "Int":
+                            return_type = EqType.INT;
+                            break;
+                        case "Bool":
+                            return_type = EqType.BOOL;
+                            break;
+                        default:
+                            throw new RuntimeException("Invalid nonterminal type for CLIA: " + argumentSorts.get(argumentSorts.size()-1).asText());
+                    }
+                    universeNTTypes.put(argumentSorts.get(0).asText(), return_type);
                     break;
                 
                 // Parser always stores grammar from synth-fun (if no new grammar is specified, it uses background grammar/theory
@@ -95,10 +106,10 @@ public class SemgusParser {
         ArrayNode array = (ArrayNode) node.get("constraint").get("arguments");
         for (int i = 1; i < array.size(); i++) {
             if (array.get(i).isInt()) {
-                if (constraints.get(i) == null) {
+                if (constraints.get(String.valueOf(i)) == null) {
                     constraints.put(String.valueOf(i), new ArrayList());
                 }
-                constraints.get(i).add(array.get(i).intValue());
+                constraints.get(String.valueOf(i)).add(array.get(i).intValue());
             }
         }
     }

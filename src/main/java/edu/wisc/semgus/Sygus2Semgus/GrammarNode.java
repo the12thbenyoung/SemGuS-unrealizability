@@ -20,12 +20,12 @@ public class GrammarNode extends ProgramNode {
     }
 
     List<NTNode> ntNodes;
-    private String funName;
-    private String argList_string;
-    private List<String> argList_list;
-    private List<SortNode> argSort_list;
-    private String funcSort_string;
-    private SortNode funcSort_node;
+    public String funName;
+    public String argList_string;
+    public List<String> argList_list;
+    public List<SortNode> argSort_list;
+    public String funcSort_string;
+    public SortNode funcSort_node;
 
     Map<String, Integer> idDic;
     Integer maxId;
@@ -62,34 +62,5 @@ public class GrammarNode extends ProgramNode {
             result = result  + node.toString() + "\n";
         }
         return result + "))";
-    }
-
-
-    public List<String> getArgList_list() {
-        return argList_list;
-    }
-
-    public void setArgList_list(List<String> argList_list) {
-        this.argList_list = argList_list;
-    }
-
-    public String getFunName(){
-        return this.funName;
-    }
-
-    public List<SortNode> getArgSort_list() {
-        return argSort_list;
-    }
-
-    public void setArgSort_list(List<SortNode> argSort_list) {
-        this.argSort_list = argSort_list;
-    }
-
-    public SortNode getFuncSort_node() {
-        return funcSort_node;
-    }
-
-    public void setFuncSort_node(SortNode funcSort_node) {
-        this.funcSort_node = funcSort_node;
     }
 }
