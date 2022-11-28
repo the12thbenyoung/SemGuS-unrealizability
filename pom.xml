@@ -40,6 +40,11 @@
       <artifactId>cvc5</artifactId>
       <version>1.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>com.microsoft</groupId>
+      <artifactId>libz3</artifactId>
+      <version>4.8.8</version>
+    </dependency>
   </dependencies>
 
   <build>
