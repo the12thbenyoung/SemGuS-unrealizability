@@ -2,15 +2,13 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import io.github.cvc5.Kind;
 import io.github.cvc5.Result;
 import io.github.cvc5.Solver;
 import io.github.cvc5.Sort;
 import io.github.cvc5.Term;
-
-import semirings.LinearSet;
 
 import java.util.ArrayList;
 import java.util.HashSet;

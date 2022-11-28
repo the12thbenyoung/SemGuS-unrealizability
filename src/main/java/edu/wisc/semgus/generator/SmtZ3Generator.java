@@ -2,7 +2,7 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
@@ -10,8 +10,6 @@ import com.microsoft.z3.Context;
 import com.microsoft.z3.IntExpr;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
-
-import semirings.LinearSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-public class SmtZ3Generator implements edu.wisc.semgus.genenerator.SmtGenerator {
+public class SmtZ3Generator implements edu.wisc.semgus.generator.SmtGenerator {
 
     @Override
     public boolean checkSat(Vector<Integer> spec, Set<LinearSet> start) {

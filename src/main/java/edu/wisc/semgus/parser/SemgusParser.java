@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
 
@@ -15,12 +14,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import edu.wisc.semgus.utilities.Equation;
 import edu.wisc.semgus.utilities.Expression;
+import io.github.cvc5.CVC5ApiException;
 import edu.wisc.semgus.utilities.EqType;
 
 public class SemgusParser {
     private static ObjectMapper objectMapper = new ObjectMapper();
 
-    public ParsedGrammer grammarEqsFromSL(String slPath) throws IOException {
+    public ParsedGrammer grammarEqsFromSL(String slPath) throws IOException, CVC5ApiException {
         JsonNode rootNode = objectMapper.readTree(Files.readString(Paths.get(slPath)));
 
         // Array of all universe/background theory nonterminals
@@ -31,12 +31,25 @@ public class SemgusParser {
         Map<String, Equation> nonterminalEquations = new HashMap<String, Equation>();
         // Values of example constraints
         Map<String, List<Integer>> constraints = new HashMap<>();
+        ProdSemanticsGenerator semGenerator;
+        // holds NTTypes of production rules. e.g. {E -> {$0 -> [], $+ -> [E, E]}}
+        Map<String, Map<String, String[]>> prodTypeMap = new HashMap<String, Map<String, String[]>>();
         
         for (JsonNode node : rootNode) {
             switch (node.get("$event").asText()) {
                 // Background nonterminal declarations
                 case "declare-term-type":
                     universeNonterminals.add(node.get("name").asText());
+                    break;
+                    
+                case "define-term-type":
+                    // Add entry to prodTypeMap for this nonterminal
+                    HashMap<String, String[]> ntProdTypeMap = new HashMap<String, String[]>();
+                    for (JsonNode production : node.get("constructors")) {
+                        ProductionType prodType = objectMapper.treeToValue(production, ProductionType.class);
+                        ntProdTypeMap.put(prodType.name, prodType.children);
+                    }
+                    prodTypeMap.put(node.get("name").asText(), ntProdTypeMap);
                     break;
 
                 // Types (int or bool) of each background nonterminal is stored as last argument type in declare-function
@@ -55,6 +68,11 @@ public class SemgusParser {
                             throw new RuntimeException("Invalid nonterminal type for CLIA: " + argumentSorts.get(argumentSorts.size()-1).asText());
                     }
                     universeNTTypes.put(argumentSorts.get(0).asText(), return_type);
+                    break;
+                    
+                case "define-function":
+                    semGenerator = new ProdSemanticsGenerator(prodTypeMap, universeNTTypes);
+                    semGenerator.genNTSemantics(node);                    
                     break;
                 
                 // Parser always stores grammar from synth-fun (if no new grammar is specified, it uses background grammar/theory
@@ -124,4 +142,9 @@ class Production {
 class Grammar {
     public Map<String, String>[] nonTerminals;
     public List<Production> productions; 
+}
+
+class ProductionType {
+    public String name;
+    public String[] children;
 }
