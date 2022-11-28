@@ -25,7 +25,7 @@ public class SMTQGenerator {
         if (type == Type.cvc5) {
             generator = new SmtCvc5Generator();
         } else if (type == Type.z3) {
-            generator = new SmtZ3Generator();
+            generator = new edu.wisc.semgus.generator.SmtZ3Generator();
         } else {
             throw new RuntimeException("cannot make a " + type.toString() + " generator.");
         }

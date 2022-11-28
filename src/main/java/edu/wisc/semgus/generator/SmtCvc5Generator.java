@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-public class SmtCvc5Generator implements SmtGenerator {
+public class SmtCvc5Generator implements edu.wisc.semgus.generator.SmtGenerator {
 
     @Override
     public boolean checkSat(Vector<Integer> spec, Set<LinearSet> start) {

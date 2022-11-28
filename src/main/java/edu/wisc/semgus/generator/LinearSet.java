@@ -1,4 +1,4 @@
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import java.util.HashSet;
 import java.util.Set;
