@@ -2,7 +2,7 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
@@ -11,7 +11,6 @@ import com.microsoft.z3.IntExpr;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
 
-import semirings.LinearSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;

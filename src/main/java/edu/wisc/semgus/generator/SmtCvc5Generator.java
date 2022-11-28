@@ -2,7 +2,7 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import io.github.cvc5.Kind;
 import io.github.cvc5.Result;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-public class SmtCvc5Generator implements SmtGenerator {
+public class SmtCvc5Generator implements edu.wisc.semgus.genenerator.SmtGenerator {
 
     @Override
     public boolean checkSat(Vector<Integer> spec, Set<LinearSet> start) {

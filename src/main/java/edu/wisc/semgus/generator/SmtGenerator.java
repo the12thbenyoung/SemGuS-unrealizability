@@ -2,9 +2,8 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
-import semirings.LinearSet;
 
 import java.util.Set;
 import java.util.Vector;

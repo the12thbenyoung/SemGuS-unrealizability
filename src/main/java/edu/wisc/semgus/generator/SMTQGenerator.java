@@ -2,7 +2,7 @@
  * https://dl.acm.org/do/10.1145/3395631/full/
  */
 
-package edu.wisc.semgus.genenerator;
+package edu.wisc.semgus.generator;
 
 import semirings.LinearSet;
 
@@ -27,7 +27,7 @@ public class SMTQGenerator {
         if (type == Type.cvc5) {
             generator = new SmtCvc5Generator();
         } else if (type == Type.z3) {
-            generator = new SmtZ3Generator();
+            generator = new edu.wisc.semgus.genenerator.SmtZ3Generator();
         } else {
             throw new RuntimeException("cannot make a " + type.toString() + " generator.");
         }
