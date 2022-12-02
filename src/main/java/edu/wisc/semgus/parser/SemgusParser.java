@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import edu.wisc.semgus.utilities.Equation;
 import edu.wisc.semgus.utilities.Expression;
 import io.github.cvc5.CVC5ApiException;
+
 import edu.wisc.semgus.utilities.EqType;
 
 public class SemgusParser {
@@ -34,6 +35,8 @@ public class SemgusParser {
         ProdSemanticsGenerator semGenerator;
         // holds NTTypes of production rules. e.g. {E -> {$0 -> [], $+ -> [E, E]}}
         Map<String, Map<String, String[]>> prodTypeMap = new HashMap<String, Map<String, String[]>>();
+        // map from nonterminals (e.g. E) to function sorts of their semantic function (e.g. E.Sem)
+        Map<String, EqType[]> semFunctionTypes = new HashMap<String, EqType[]>();
         
         for (JsonNode node : rootNode) {
             switch (node.get("$event").asText()) {
@@ -55,24 +58,28 @@ public class SemgusParser {
                 // Types (int or bool) of each background nonterminal is stored as last argument type in declare-function
                 case "declare-function":
                     JsonNode argumentSorts = node.get("rank").get("argumentSorts");
+                    String ntName = argumentSorts.get(0).asText();
                     // For CLIA, return type (type of r) must be Int or Bool
-                    EqType return_type;
-                    switch (argumentSorts.get(argumentSorts.size()-1).asText()) {
-                        case "Int":
-                            return_type = EqType.INT;
-                            break;
-                        case "Bool":
-                            return_type = EqType.BOOL;
-                            break;
-                        default:
-                            throw new RuntimeException("Invalid nonterminal type for CLIA: " + argumentSorts.get(argumentSorts.size()-1).asText());
+                    EqType return_type = strToType(argumentSorts.get(argumentSorts.size()-1).asText());
+                    universeNTTypes.put(ntName, return_type);
+                    
+                    // convert argumentSorts e.g. [B, Int, Int, Int] to argTypesList [EqType.BOOL, EqType.INT, ...]
+                    // last argumentSort is output, so ignore here
+                    EqType[] argTypesList = new EqType[argumentSorts.size() - 1];
+                    argTypesList[0] = universeNTTypes.get(ntName);
+                    for(int i = 1; i < argumentSorts.size()-1; i++) {
+                        argTypesList[i] = strToType(argumentSorts.get(i).asText());
                     }
-                    universeNTTypes.put(argumentSorts.get(0).asText(), return_type);
+                    semFunctionTypes.put(ntName, argTypesList);
+
                     break;
                     
                 case "define-function":
-                    semGenerator = new ProdSemanticsGenerator(prodTypeMap, universeNTTypes);
-                    semGenerator.genNTSemantics(node);                    
+                    semGenerator = new ProdSemanticsGenerator(prodTypeMap, universeNTTypes, semFunctionTypes);
+                    List<ProdSemantics> semList = semGenerator.genNTSemantics(node);                    
+                    for (ProdSemantics sem : semList) {
+                        System.out.println(sem.assertions);
+                    }
                     break;
                 
                 // Parser always stores grammar from synth-fun (if no new grammar is specified, it uses background grammar/theory
@@ -129,6 +136,17 @@ public class SemgusParser {
                 }
                 constraints.get(String.valueOf(i)).add(array.get(i).intValue());
             }
+        }
+    }
+    
+    public static EqType strToType(String str) {
+        switch (str) {
+            case "Int":
+                return EqType.INT;
+            case "Bool":
+                return EqType.BOOL;
+            default:
+                throw new RuntimeException("Invalid nonterminal type for CLIA: " + str);
         }
     }
 }

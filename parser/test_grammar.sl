@@ -77,25 +77,33 @@
           (exists ((rb Bool))
               (and
                (B.Sem bt1 x y z rb)
-               (= r(not rb)))))
+               (= r (not rb)))))
          (($and bt1 bt2)
           (exists ((rb1 Bool) (rb2 Bool))
               (and
                (B.Sem bt1 x y z rb1)
                (B.Sem bt2 x y z rb2)
-               (= r(and rb1 rb2)))))
+               (= r (and rb1 rb2)))))
          (($or bt1 bt2)
           (exists ((rb1 Bool) (rb2 Bool))
               (and
                (B.Sem bt1 x y z rb1)
                (B.Sem bt2 x y z rb2)
-               (= r(or rb1 rb2)))))
+               (= r (or rb1 rb2)))))
          (($>= et1 et2)
           (exists ((r1 Int) (r2 Int))
               (and
                (E.Sem et1 x y z r1)
                (E.Sem et2 x y z r2)
-               (= r(>= r1 r2)))))))
+               (= r (>= r1 r2)))))
+         (($ge et1 et2)
+          (exists ((r1 Int) (r2 Int) (r3 Int))
+              (and
+               (E.Sem et1 x y z r1)
+               (E.Sem et2 x y z r2)
+               (= r3 1)
+               (= r (not (< r1 (* r3 r2)))))))
+        ))
     :input (x y z) :output (r))))
 
 
