@@ -79,6 +79,8 @@ public class SemgusParser {
                     List<ProdSemantics> semList = semGenerator.genNTSemantics(node);                    
                     for (ProdSemantics sem : semList) {
                         System.out.println(sem.assertions);
+                        System.out.println(semGenerator.isOr(sem));
+                        System.out.println("===========================");
                     }
                     break;
                 

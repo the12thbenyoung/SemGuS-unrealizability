@@ -22,12 +22,16 @@ public class ProdSemantics {
     public List<Term> args;
     // Conjunction of semantic-defining assertions
     public Term assertions;
+    // Semantic function applications for each arg: e.g.
+    // [E.Sem(et1, x, y, z), E.Sem(et2, x, y, z)] for [et1, et2]
+    public List<Term> semCalls;
     
-    public ProdSemantics(String nonterminal, List<Term> inputs, Term output, List<Term> args, Term assertions) {
+    public ProdSemantics(String nonterminal, List<Term> inputs, Term output, List<Term> args, Term assertions, List<Term> semCalls) {
         this.nonterminal = nonterminal;
         this.inputs = inputs;
         this.output = output;
         this.args = args;
         this.assertions = assertions;
+        this.semCalls = semCalls;
     }
 }

@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.atn.SemanticContext;
 
 import edu.wisc.semgus.Sygus2Semgus.Sygus2Semgus;
 import edu.wisc.semgus.parser.SemgusParser;
+import edu.wisc.semgus.parser.cvc5_test;
 import edu.wisc.semgus.parser.ProdSemanticsGenerator;
 import io.github.cvc5.*;
 
@@ -15,7 +16,5 @@ public class App
     {
         SemgusParser parser = new SemgusParser();
         parser.grammarEqsFromSL("parser/test_grammar.json").getNonterminalEquations();
-        // Sygus2Semgus converter = new Sygus2Semgus();
-        // converter.sygusSL2SemgusSL("parser/test_grammar.json");
     }
 }
