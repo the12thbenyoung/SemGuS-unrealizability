@@ -19,32 +19,38 @@ import io.github.cvc5.CVC5ApiException;
 import edu.wisc.semgus.utilities.EqType;
 
 public class SemgusParser {
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    // Types (Int or Bool) of universe nonterminals
+    Map<String, EqType> universeNTTypes;
+    // Equations for each nonterminal
+    Map<String, Equation> ntEquations;
+    // Values of example constraints
+    Map<String, List<Integer>> constraints;
+    // holds NTTypes of production rules. e.g. {E -> {$0 -> [], $+ -> [E, E]}}
+    Map<String, Map<String, String[]>> prodTypeMap;
+    // map from nonterminals (e.g. E) to function sorts of their semantic function (e.g. E.Sem)
+    Map<String, EqType[]> semFunctionTypes;
+    // map from each nonterminal to prodSemantics of each of its productions
+    Map<String, Map<String, ProdSemantics>> ntSemanticsMap;
+
+    ProdSemanticsGenerator semGenerator;
+    ObjectMapper objectMapper;
+
+    public SemgusParser() {
+        this.universeNTTypes = new HashMap<String, EqType>();
+        this.ntEquations = new HashMap<String, Equation>();
+        this.constraints = new HashMap<>();
+        this.prodTypeMap = new HashMap<String, Map<String, String[]>>();
+        this.semFunctionTypes = new HashMap<String, EqType[]>();
+        this.ntSemanticsMap = new HashMap<String, Map<String, ProdSemantics>>();
+        this.objectMapper = new ObjectMapper();
+    }
+
 
     public ParsedGrammer grammarEqsFromSL(String slPath) throws IOException, CVC5ApiException {
         JsonNode rootNode = objectMapper.readTree(Files.readString(Paths.get(slPath)));
 
-        // Array of all universe/background theory nonterminals
-        List<String> universeNonterminals = new ArrayList<String>();
-        // Types (Int or Bool) of universe nonterminals
-        Map<String, EqType> universeNTTypes = new HashMap<String, EqType>();
-        // Equations for each nonterminal
-        Map<String, Equation> nonterminalEquations = new HashMap<String, Equation>();
-        // Values of example constraints
-        Map<String, List<Integer>> constraints = new HashMap<>();
-        ProdSemanticsGenerator semGenerator;
-        // holds NTTypes of production rules. e.g. {E -> {$0 -> [], $+ -> [E, E]}}
-        Map<String, Map<String, String[]>> prodTypeMap = new HashMap<String, Map<String, String[]>>();
-        // map from nonterminals (e.g. E) to function sorts of their semantic function (e.g. E.Sem)
-        Map<String, EqType[]> semFunctionTypes = new HashMap<String, EqType[]>();
-        
         for (JsonNode node : rootNode) {
             switch (node.get("$event").asText()) {
-                // Background nonterminal declarations
-                case "declare-term-type":
-                    universeNonterminals.add(node.get("name").asText());
-                    break;
-                    
                 case "define-term-type":
                     // Add entry to prodTypeMap for this nonterminal
                     HashMap<String, String[]> ntProdTypeMap = new HashMap<String, String[]>();
@@ -74,37 +80,35 @@ public class SemgusParser {
 
                     break;
                     
+                // defines semantics of all productions for a single nonterminal
                 case "define-function":
                     semGenerator = new ProdSemanticsGenerator(prodTypeMap, universeNTTypes, semFunctionTypes);
-                    List<ProdSemantics> semList = semGenerator.genNTSemantics(node);                    
-                    for (ProdSemantics sem : semList) {
-                        System.out.println(sem.assertions);
-                        System.out.println(semGenerator.isOr(sem));
-                        System.out.println("===========================");
-                    }
+                    Map<String, ProdSemantics> semList = semGenerator.genNTSemantics(node);                    
+                    // stores "E.Sem", but want key to just be "E"
+                    ntSemanticsMap.put(node.get("name").asText().replace(".Sem", ""), semList);
                     break;
                 
                 // Parser always stores grammar from synth-fun (if no new grammar is specified, it uses background grammar/theory
                 // with "__agtt" appended to the end of each nonterminal)
                 case "synth-fun":
-                    parseSynthFun(node, universeNTTypes, nonterminalEquations);
+                    parseSynthFun(node);
                     break;
 
                 // Parse single constraint example
                 case "constraint":
-                    parseConstraint(node, constraints);
+                    parseConstraint(node);
                     break;
             }
         }
 
         ParsedGrammer parsedGrammer = new ParsedGrammer();
-        parsedGrammer.setNonterminalEquations(new ArrayList<Equation>(nonterminalEquations.values()));
+        parsedGrammer.setNonterminalEquations(new ArrayList<Equation>(ntEquations.values()));
         parsedGrammer.setConstraints(constraints);
         
         return parsedGrammer;
     }
 
-    private void parseSynthFun(JsonNode node, Map<String, EqType> universeNTTypes, Map<String, Equation> nonterminalEquations) throws IOException {
+    private void parseSynthFun(JsonNode node) throws IOException {
         Grammar grammar = objectMapper.treeToValue(node.get("grammar"), Grammar.class);
 
         // Universal nonterminal type of each nonterminal
@@ -114,22 +118,37 @@ public class SemgusParser {
         }
 
         for (Production production : grammar.productions) {
-            String nonterminal = production.instance;
-            EqType type = universeNTTypes.get(parentNTs.get(nonterminal));
+            // name of nonterminal
+            String nt = production.instance;
+            // name of operator. get rid of "__agtt" that gets appended when default background grammar is used
+            String op = production.operator.replace("__agtt", "");
+            EqType type = universeNTTypes.get(parentNTs.get(nt));
             Expression newExp;
-            if (type == EqType.INT)
-                newExp = Expression.inferIntExpression(production.operator, production.occurrences);
-            else // (type == EqType.BOOL)
-                 newExp = Expression.inferBoolExpression(production.operator, production.occurrences);
+            if (type == EqType.INT) {
+                newExp = Expression.inferIntExpression(
+                    op, 
+                    production.occurrences, 
+                    ntSemanticsMap.get(parentNTs.get(nt)).get(op),
+                    semGenerator
+                );
+            }
+            else {// (type == EqType.BOOL)
+                newExp = Expression.inferBoolExpression(
+                    op, 
+                    production.occurrences, 
+                    ntSemanticsMap.get(parentNTs.get(nt)).get(op), 
+                    semGenerator
+                );
+            }
 
-            if (!nonterminalEquations.containsKey(nonterminal)) 
-                nonterminalEquations.put(nonterminal, new Equation(nonterminal, newExp, type));
+            if (!ntEquations.containsKey(nt)) 
+                ntEquations.put(nt, new Equation(nt, newExp, type));
             else 
-                nonterminalEquations.get(nonterminal).right = nonterminalEquations.get(nonterminal).right.oplus(newExp);
+                ntEquations.get(nt).right = ntEquations.get(nt).right.oplus(newExp);
         }
     }
 
-    private void parseConstraint(JsonNode node, Map<String, List<Integer>> constraints) {
+    private void parseConstraint(JsonNode node) {
         ArrayNode array = (ArrayNode) node.get("constraint").get("arguments");
         for (int i = 1; i < array.size(); i++) {
             if (array.get(i).isInt()) {

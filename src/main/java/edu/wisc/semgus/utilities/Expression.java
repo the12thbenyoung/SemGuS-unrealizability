@@ -4,6 +4,8 @@
 package edu.wisc.semgus.utilities;
 
 import javax.management.RuntimeErrorException;
+import edu.wisc.semgus.parser.ProdSemantics;
+import edu.wisc.semgus.parser.ProdSemanticsGenerator;
 
 public class Expression<E> {
     public ExpType type;
@@ -40,92 +42,84 @@ public class Expression<E> {
         return new Expression(ExpType.OPLUS, this, right);
     }
     
-    // Infers expression from (operator, occurrences) pair read from grammar for int type nonterminal
-    public static Expression<Integer> inferIntExpression(String operator, String[] occurrences){
+    // Use semantic equivalence testing (in semGenerator) to create expression from production
+    public static Expression<Integer> inferIntExpression(String op, String[] occurrences, ProdSemantics sem, ProdSemanticsGenerator semGenerator){
+        // to be returned
         Expression<Integer> exp = new Expression<Integer>();
-        // assume all operators begin with $
-        if (operator.charAt(0) != '$') {
-            throw new RuntimeException("All grammar operators must start with '$'");
+
+        String inputTest = semGenerator.isInput(sem);
+        int constTest = semGenerator.isConst(sem);
+        if (!inputTest.equals("")) {
+            // input variable (e.g. x,y,z)
+            exp.var = inputTest;
+            exp.type = ExpType.VAR;
+        } else if (constTest != Integer.MIN_VALUE) {
+            // constant integer
+            exp.constant = constTest;
+            exp.type = ExpType.CONST;
+        } else if (semGenerator.isPlus(sem)) {
+            exp.type = ExpType.OTIMES;
+            exp.left = new Expression<Integer>(occurrences[0]);
+            exp.right = new Expression<Integer>(occurrences[1]);
+        } else if (semGenerator.isIte(sem)) {
+            exp.type = ExpType.ITE;
+            exp.condition = new Expression<Boolean>(occurrences[0]);
+            exp.left = new Expression<Integer>(occurrences[1]);
+            exp.right = new Expression<Integer>(occurrences[2]);
+        } else {
+            throw new RuntimeException("Unable to match semantics of integer-valued production " + op + " with CLIA");
         }
-        // constant or variable
-        switch (occurrences.length) {
-            case 0:
-                try {
-                    exp.constant = Integer.parseInt(operator.substring(1));
-                    exp.type = ExpType.CONST;
-                } catch (NumberFormatException e) {
-                    exp.var = operator.substring(1);
-                    exp.type = ExpType.VAR;
-                }                        
-                break;
-            case 2:
-                if (!operator.equals("$+"))
-                    throw new RuntimeException("Invalid integer binary expression: " + operator);
-                exp.type = ExpType.OTIMES;
-                exp.left = new Expression<Integer>(occurrences[0]);
-                exp.right = new Expression<Integer>(occurrences[1]);
-                break;
-            case 3:
-                if (!operator.equals("$ite"))
-                    throw new RuntimeException("Invalid integer binary ternary: " + operator);
-                exp.type = ExpType.ITE;
-                exp.condition = new Expression<Boolean>(occurrences[0]);
-                exp.left = new Expression<Integer>(occurrences[1]);
-                exp.right = new Expression<Integer>(occurrences[2]);
-                break;
-            default: 
-                throw new RuntimeException("Invalid number of occurrences for Integer production: " + occurrences.length);
-        } 
 
         return exp;
     }
     
-    public static Expression<Boolean> inferBoolExpression(String operator, String[] occurrences){
+    public static Expression<Boolean> inferBoolExpression(String op, String[] occurrences, ProdSemantics sem, ProdSemanticsGenerator semGenerator){
+        // to be returned
         Expression<Boolean> exp = new Expression<Boolean>();
-        // assume all operators begin with $
-        if (operator.charAt(0) != '$') {
-            throw new RuntimeException("All grammar operators must start with '$'");
+        if (semGenerator.isTrue(sem)) {
+            exp.type = ExpType.CONST;
+            exp.constant = true;
+        } else if (semGenerator.isFalse(sem)) {
+            exp.type = ExpType.CONST;
+            exp.constant = false;
+        } else if (semGenerator.isNot(sem)) {
+            exp.bop = "not";
+            exp.type = ExpType.NOT;
+            exp.left = new Expression<Boolean>(occurrences[0]);
+        } else if (semGenerator.isAnd(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = "and";
+            exp.left = new Expression<Boolean>(occurrences[0]);
+            exp.right = new Expression<Boolean>(occurrences[1]);
+        } else if (semGenerator.isOr(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = "or";
+            exp.left = new Expression<Boolean>(occurrences[0]);
+            exp.right = new Expression<Boolean>(occurrences[1]);
+        } else if (semGenerator.isGeq(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = ">=";
+            exp.left = new Expression<Integer>(occurrences[0]);
+            exp.right = new Expression<Integer>(occurrences[1]);
+        } else if (semGenerator.isGt(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = ">";
+            exp.left = new Expression<Integer>(occurrences[0]);
+            exp.right = new Expression<Integer>(occurrences[1]);
+        } else if (semGenerator.isLeq(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = "<=";
+            exp.left = new Expression<Integer>(occurrences[0]);
+            exp.right = new Expression<Integer>(occurrences[1]);
+        } else if (semGenerator.isLt(sem)) {
+            exp.type = ExpType.BOOL;
+            exp.bop = "<";
+            exp.left = new Expression<Integer>(occurrences[0]);
+            exp.right = new Expression<Integer>(occurrences[1]);
         }
-        switch (occurrences.length) {
-            case 0: // constant or variable
-                if (operator.equals("$t")) {
-                    exp.type = ExpType.CONST;
-                    exp.constant = true;
-                }
-                else if (operator.equals("$f")) {
-                    exp.type = ExpType.CONST;
-                    exp.constant = false;
-                }
-                else {
-                    exp.type = ExpType.VAR;
-                    exp.var = operator.substring(1);
-                }
-                break;
-            case 1:
-                if (!operator.equals("$not"))
-                    throw new RuntimeException("Invalid boolean unary expression: " + operator);
-                exp.bop = "not";
-                exp.type = ExpType.NOT;
-                exp.left = new Expression<Boolean>(occurrences[0]);
-                break;
-            case 2:
-                exp.type = ExpType.BOOL;
-                exp.bop = operator.substring(1);
-                if (operator.equals("$and") || operator.equals("$or")) {
-                    exp.left = new Expression<Boolean>(occurrences[0]);
-                    exp.right = new Expression<Boolean>(occurrences[1]);
-                }
-                else if (operator.equals("$>=") || operator.equals("$<=") || operator.equals("$<") || operator.equals("$>")) {
-                    exp.left = new Expression<Integer>(occurrences[0]);
-                    exp.right = new Expression<Integer>(occurrences[1]);
-                }
-                else {
-                    throw new RuntimeException("Invalid boolean binary expression: " + operator);
-                }
-                break;
-            default: 
-                throw new RuntimeException("Invalid number of occurrences for Boolean production: " + occurrences.length);
-        } 
+        else {
+            throw new RuntimeException("Unable to match semantics of boolean-valued production " + op + " with CLIA");
+        }
 
         return exp;
     }

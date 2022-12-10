@@ -74,9 +74,9 @@ public class ProdSemanticsGenerator {
         }
     }
 
-    public List<ProdSemantics> genNTSemantics(JsonNode node) throws CVC5ApiException {
+    public Map<String, ProdSemantics> genNTSemantics(JsonNode node) throws CVC5ApiException {
         // to be returned
-        List<ProdSemantics> semList = new ArrayList<ProdSemantics>();
+        Map<String, ProdSemantics> semMap = new HashMap<String, ProdSemantics>();
 
         // list of inputs and output (e.g. [et, x, y, z, r])
         JsonNode inputoutput = node.get("definition").get("arguments");
@@ -148,12 +148,13 @@ public class ProdSemanticsGenerator {
             state.put(output.toString(), output);
 
             ProdSemantics sem = new ProdSemantics(ntName, inputs, output, args, getProdSemanticsTerm(production), semCalls);
-            semList.add(sem);
+            // production.get("operator") is name of production operator (e.g. $+)
+            semMap.put(production.get("operator").asText(), sem);
             
             state.clear();
         }
         
-        return semList;
+        return semMap;
     }       
     
     private Term getProdSemanticsTerm(JsonNode production) {
@@ -303,37 +304,56 @@ public class ProdSemanticsGenerator {
     /* Tests against fixed CLIA semantics */
     /******************************************************************* */
     /* Integer types ------------------------------------------------------------------------- */
-    public boolean isZero(ProdSemantics sem) {
+    // check if semantics are equivalent to an input var (e.g. x,y,z) and return which one
+    // or empty string if none of them
+    public String isInput(ProdSemantics sem) {
         // needs zero args and returns int
-        if (sem.args.size() != 0) {return false;}
-        if (!sem.output.getSort().equals(integer)) {return false;}
+        if (sem.args.size() != 0) {return "";}
+        if (!sem.output.getSort().equals(integer)) {return "";}
 
-        // clear solver
-        slv.resetAssertions();
         Term r_true = slv.mkConst(universeNTSorts.get(sem.nonterminal), "r_true");
-        Term assertions = slv.mkTerm(Kind.EQUAL, r_true, slv.mkInteger(0));
-        
-        // Add sem's semantics
-        slv.assertFormula(slv.mkTerm(Kind.AND, assertions, sem.assertions));
-        // unsat iff semantics are equivalent
-        return slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat();
-    }
+        for (Term input : sem.inputs) {
+            // clear solver
+            slv.resetAssertions();
 
-    public boolean isOne(ProdSemantics sem) {
+            Term assertions = slv.mkTerm(Kind.EQUAL, input, r_true);
+            // Add sem's semantics
+            slv.assertFormula(slv.mkTerm(Kind.AND, assertions, sem.assertions));
+            // unsat iff semantics are equivalent (i.e. semantics are r_true (return value) = input)
+            if (slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat()) {
+                return input.toString();
+            }
+        }
+
+        return "";
+    }
+    
+    /* check if semantics are equivalent to some constant integer, and if so return it.
+     * Otherwise return -\infty.
+     * cheap and dirty trick: only check from 0-10. Seems to require FORALL quantifiers
+     * to check in general (maybe a better way?)
+     */
+    public int isConst(ProdSemantics sem) {
         // needs zero args and returns int
-        if (sem.args.size() != 0) {return false;}
-        if (!sem.output.getSort().equals(integer)) {return false;}
+        if (sem.args.size() != 0) {return Integer.MIN_VALUE;}
+        if (!sem.output.getSort().equals(integer)) {return Integer.MIN_VALUE;}
 
-        // clear solver
-        slv.resetAssertions();
         Term r_true = slv.mkConst(universeNTSorts.get(sem.nonterminal), "r_true");
-        Term assertions = slv.mkTerm(Kind.EQUAL, r_true, slv.mkInteger(1));
-        
-        // Add sem's semantics
-        slv.assertFormula(slv.mkTerm(Kind.AND, assertions, sem.assertions));
-        // unsat iff semantics are equivalent
-        return slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat();
+        for (int i = 0; i < 11; i++) {
+            // clear solver
+            slv.resetAssertions();
+
+            Term assertions = slv.mkTerm(Kind.EQUAL, slv.mkInteger(i), r_true);
+            // Add sem's semantics
+            slv.assertFormula(slv.mkTerm(Kind.AND, assertions, sem.assertions));
+            // unsat iff semantics are equivalent (i.e. semantics are r_true (return value) = i)
+            if (slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat()) {
+                return i;
+            }
+        }
+        return Integer.MIN_VALUE;
     }
+    
 
     public boolean isPlus(ProdSemantics sem) {
         // needs two args
@@ -438,7 +458,7 @@ public class ProdSemanticsGenerator {
     }
 
     public boolean isNot(ProdSemantics sem) {
-        // needs zero args and returns bool
+        // one bool arg and returns bool
         if (sem.args.size() != 1) {return false;}
         if (!(sem.args.get(0).getSort().equals(bool)
               && sem.output.getSort().equals(bool))) {return false;}
@@ -461,7 +481,7 @@ public class ProdSemanticsGenerator {
     }
     
     public boolean isAnd(ProdSemantics sem) {
-        // needs zero args and returns bool
+        // two bool args and returns bool
         if (sem.args.size() != 2) {return false;}
         if (!(sem.args.get(0).getSort().equals(bool)
               && sem.args.get(1).getSort().equals(bool)
@@ -487,7 +507,7 @@ public class ProdSemanticsGenerator {
     }
 
     public boolean isOr(ProdSemantics sem) {
-        // needs zero args and returns bool
+        // two bool args and returns bool
         if (sem.args.size() != 2) {return false;}
         if (!(sem.args.get(0).getSort().equals(bool)
               && sem.args.get(1).getSort().equals(bool)
@@ -511,4 +531,44 @@ public class ProdSemanticsGenerator {
         // unsat iff semantics are equivalent
         return slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat();
     }
+    
+    public boolean isRelation(ProdSemantics sem, Kind op) {
+        // needs two int args and returns bool
+        if (sem.args.size() != 2) {return false;}
+        if (!(sem.args.get(0).getSort().equals(integer)
+              && sem.args.get(1).getSort().equals(integer)
+              && sem.output.getSort().equals(bool))) {return false;}
+
+        // clear solver
+        slv.resetAssertions();
+        Term r_true = slv.mkConst(universeNTSorts.get(sem.nonterminal), "r_true");
+        Term r1 = slv.mkConst(integer, "r1_true");
+        Term r2 = slv.mkConst(integer, "r2_true");
+
+        Term assertions = slv.mkTerm(Kind.AND,
+            new Term[] {
+                slv.mkTerm(Kind.EQUAL, sem.semCalls.get(0), r1),
+                slv.mkTerm(Kind.EQUAL, sem.semCalls.get(1), r2),
+                slv.mkTerm(Kind.EQUAL, slv.mkTerm(op, r1, r2), r_true)
+            });
+        
+        // Add sem's semantics
+        slv.assertFormula(slv.mkTerm(Kind.AND, assertions, sem.assertions));
+        // unsat iff semantics are equivalent
+        return slv.checkSatAssuming(slv.mkTerm(Kind.EQUAL, sem.output, r_true).notTerm()).isUnsat();
+    }
+
+    public boolean isLeq(ProdSemantics sem) {
+        return isRelation(sem, Kind.LEQ);
+    }
+    public boolean isLt(ProdSemantics sem) {
+        return isRelation(sem, Kind.LT);
+    }
+    public boolean isGeq(ProdSemantics sem) {
+        return isRelation(sem, Kind.GEQ);
+    }
+    public boolean isGt(ProdSemantics sem) {
+        return isRelation(sem, Kind.GT);
+    }
+
 }
