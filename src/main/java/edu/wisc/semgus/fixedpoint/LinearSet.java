@@ -1,4 +1,4 @@
-package edu.wisc.semgus.generator;
+package edu.wisc.semgus.fixedpoint;
 
 import java.util.HashSet;
 import java.util.Set;

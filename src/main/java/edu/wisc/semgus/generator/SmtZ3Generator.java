@@ -11,6 +11,8 @@ import com.microsoft.z3.IntExpr;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
 
+import edu.wisc.semgus.fixedpoint.LinearSet;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

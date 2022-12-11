@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import edu.wisc.semgus.fixedpoint.LinearSet;
+
 public class SmtCvc5Generator implements edu.wisc.semgus.generator.SmtGenerator {
 
     @Override

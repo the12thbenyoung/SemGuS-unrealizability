@@ -3,7 +3,6 @@
  */
 package edu.wisc.semgus.utilities;
 
-import javax.management.RuntimeErrorException;
 import edu.wisc.semgus.parser.ProdSemantics;
 import edu.wisc.semgus.parser.ProdSemanticsGenerator;
 
@@ -146,14 +145,4 @@ public class Expression<E> {
                 return null;
         }
     }
-}
-
-enum ExpType {
-    CONST,
-    VAR,
-    OTIMES,
-    OPLUS,
-    ITE,
-    BOOL,
-    NOT
 }

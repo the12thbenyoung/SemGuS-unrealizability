@@ -8,6 +8,8 @@ import java.lang.Integer;
 import java.util.Set;
 import java.util.Vector;
 
+import edu.wisc.semgus.fixedpoint.LinearSet;
+
 
 public class SMTQGenerator {
 
