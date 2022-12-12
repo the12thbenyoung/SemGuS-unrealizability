@@ -1,3 +1,6 @@
+/* Modified from implementation of Nay. Artifacts at
+ * https://dl.acm.org/do/10.1145/3395631/full/
+ */
 package edu.wisc.semgus.fixedpoint;
 import edu.wisc.semgus.utilities.Equation;
 import edu.wisc.semgus.utilities.ExpType;
@@ -35,7 +38,6 @@ public  class ExpressionApplication {
                 return  exp;
             case VAR:
                 if(assignment.keySet().contains(exp.var)){
-
                     result.type = ExpType.CONST;
                     result.constant = assignment.get(exp.var);
                     return result;

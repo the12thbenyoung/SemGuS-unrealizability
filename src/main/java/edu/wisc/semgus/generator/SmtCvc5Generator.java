@@ -53,7 +53,7 @@ public class SmtCvc5Generator implements edu.wisc.semgus.generator.SmtGenerator 
         List<Term> bound_vars = new ArrayList<>();
 
         for (int i = 0; i < ls.getPeriod().size(); i++) {
-            Term var = solver.mkVar(intSort, "z" + "_" + i);
+            Term var = solver.mkConst(intSort, "z" + "_" + i);
             bound_vars.add(var);
             body = body.andTerm(solver.mkTerm(Kind.GEQ, var, zero));
         }
@@ -72,12 +72,7 @@ public class SmtCvc5Generator implements edu.wisc.semgus.generator.SmtGenerator 
             body = body.andTerm(equation);
         }
 
-        System.out.println("\nbody:\n------------\n"+body+"\n------------");
-
-        Term term = solver.mkFalse();
-        Result satResult = solver.checkSatAssuming(term);
-        System.out.println("satResult:"+satResult.toString());
-
+        solver.assertFormula(body);
         return solver.checkSat().isSat();
     }
 

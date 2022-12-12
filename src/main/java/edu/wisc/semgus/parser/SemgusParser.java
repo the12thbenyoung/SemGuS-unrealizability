@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,14 +24,18 @@ public class SemgusParser {
     Map<String, EqType> universeNTTypes;
     // Equations for each nonterminal
     Map<String, Equation> ntEquations;
-    // Values of example constraints
-    Map<String, List<Integer>> constraints;
     // holds NTTypes of production rules. e.g. {E -> {$0 -> [], $+ -> [E, E]}}
     Map<String, Map<String, String[]>> prodTypeMap;
     // map from nonterminals (e.g. E) to function sorts of their semantic function (e.g. E.Sem)
     Map<String, EqType[]> semFunctionTypes;
     // map from each nonterminal to prodSemantics of each of its productions
     Map<String, Map<String, ProdSemantics>> ntSemanticsMap;
+    // map each input var to its list of values across examples e.g. {x -> [0,1], y -> [3,2]}
+    Map<String, Vector<Integer>> exampleInputs;
+    // ordered list of names of input vars, since "constraint" block doesn't include these
+    Vector<String> inputVarNames;
+    // Expect outputs for each example
+    Vector<Integer> constraints;
 
     ProdSemanticsGenerator semGenerator;
     ObjectMapper objectMapper;
@@ -38,15 +43,17 @@ public class SemgusParser {
     public SemgusParser() {
         this.universeNTTypes = new HashMap<String, EqType>();
         this.ntEquations = new HashMap<String, Equation>();
-        this.constraints = new HashMap<>();
         this.prodTypeMap = new HashMap<String, Map<String, String[]>>();
         this.semFunctionTypes = new HashMap<String, EqType[]>();
         this.ntSemanticsMap = new HashMap<String, Map<String, ProdSemantics>>();
+        this.exampleInputs = new HashMap<String, Vector<Integer>>();
+        this.inputVarNames = new Vector<String>();
+        this.constraints = new Vector<Integer>();
         this.objectMapper = new ObjectMapper();
     }
 
 
-    public ParsedGrammer grammarEqsFromSL(String slPath) throws IOException, CVC5ApiException {
+    public ParsedGrammar grammarEqsFromSL(String slPath) throws IOException, CVC5ApiException {
         JsonNode rootNode = objectMapper.readTree(Files.readString(Paths.get(slPath)));
 
         for (JsonNode node : rootNode) {
@@ -85,7 +92,19 @@ public class SemgusParser {
                     semGenerator = new ProdSemanticsGenerator(prodTypeMap, universeNTTypes, semFunctionTypes);
                     Map<String, ProdSemantics> semList = semGenerator.genNTSemantics(node);                    
                     // stores "E.Sem", but want key to just be "E"
-                    ntSemanticsMap.put(node.get("name").asText().replace(".Sem", ""), semList);
+                    String nt = node.get("name").asText().replace(".Sem", "");
+                    ntSemanticsMap.put(nt, semList);
+                    
+                    ArrayNode args = (ArrayNode) node.get("definition").get("arguments");
+                    // add input variables (e.g. x,y,z) as keys to exampleInputs map
+                    // and to inputVarNames, if haven't already done so
+                    if (inputVarNames.size() == 0) {
+                        // ignore first arg (e.g. et1 of type E) and last arg (return value r)
+                        for(int i = 1; i < args.size() - 1; i++) {
+                            exampleInputs.put(args.get(i).asText(), new Vector<Integer>());
+                            inputVarNames.add(args.get(i).asText());
+                        }
+                    }
                     break;
                 
                 // Parser always stores grammar from synth-fun (if no new grammar is specified, it uses background grammar/theory
@@ -101,11 +120,12 @@ public class SemgusParser {
             }
         }
 
-        ParsedGrammer parsedGrammer = new ParsedGrammer();
-        parsedGrammer.setNonterminalEquations(new ArrayList<Equation>(ntEquations.values()));
-        parsedGrammer.setConstraints(constraints);
+        ParsedGrammar grammar = new ParsedGrammar();
+        grammar.setNonterminalEquations(new ArrayList<Equation>(ntEquations.values()));
+        grammar.setConstraints(constraints);
+        grammar.setExampleInputs(exampleInputs);
         
-        return parsedGrammer;
+        return grammar;
     }
 
     private void parseSynthFun(JsonNode node) throws IOException {
@@ -150,14 +170,17 @@ public class SemgusParser {
 
     private void parseConstraint(JsonNode node) {
         ArrayNode array = (ArrayNode) node.get("constraint").get("arguments");
-        for (int i = 1; i < array.size(); i++) {
+        // name of nt
+        String nt = array.get(0).get("returnSort").asText();
+
+        // first size-1 arguments are inputs, last is expected output
+        for (int i = 1; i < array.size()-1; i++) {
             if (array.get(i).isInt()) {
-                if (constraints.get(String.valueOf(i)) == null) {
-                    constraints.put(String.valueOf(i), new ArrayList());
-                }
-                constraints.get(String.valueOf(i)).add(array.get(i).intValue());
+                // add as new example for (i-1)st input var
+                exampleInputs.get(inputVarNames.get(i-1)).add(array.get(i).asInt());
             }
         }
+        constraints.add(array.get(array.size() - 1).asInt());
     }
     
     public static EqType strToType(String str) {

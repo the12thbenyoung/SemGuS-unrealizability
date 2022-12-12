@@ -1,3 +1,6 @@
+/* Modified from implementation of Nay. Artifacts at
+ * https://dl.acm.org/do/10.1145/3395631/full/
+ */
 package edu.wisc.semgus.fixedpoint;
 
 import java.util.*;
@@ -111,6 +114,8 @@ public class DAG {
                 result.addAll(getReachedInExpression(exp.right));
                 result.addAll(getReachedInExpression(exp.condition));
                 return result;
+            case OTIMES:
+            case OPLUS:
             case BOOL:
                 result.addAll(getReachedInExpression(exp.left));
                 result.addAll(getReachedInExpression(exp.right));
@@ -118,10 +123,9 @@ public class DAG {
             case NOT:
                 result.addAll(getReachedInExpression(exp.left));
                 return result;
-            default:
-                System.out.println("ERROR: wrong type getReachedInExpression: "+exp.toString());
-                return null;
         }
+        System.out.println("ERROR: wrong type getReachedInExpression: "+exp.toString());
+        return null;
     }
 
     // -------------------------------

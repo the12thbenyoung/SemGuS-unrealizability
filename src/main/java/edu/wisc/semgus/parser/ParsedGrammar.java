@@ -2,15 +2,19 @@ package edu.wisc.semgus.parser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import edu.wisc.semgus.utilities.Equation;
 
 /**
  * Class to represent values extracted after parsing grammer file
 **/
-public class ParsedGrammer {
+public class ParsedGrammar {
     private List<Equation> nonterminalEquations;
-    private Map<String, List<Integer>> constraints;
+    // e.g. {x -> [0,1], y -> [3,2]}
+    private Map<String, Vector<Integer>> exampleInputs;
+    // expected output of each example
+    private Vector<Integer> constraints;
 
     public void setNonterminalEquations(List<Equation> nonterminalEquations) {
         this.nonterminalEquations = nonterminalEquations;
@@ -20,11 +24,19 @@ public class ParsedGrammer {
         return this.nonterminalEquations;
     }
 
-    public void setConstraints(Map<String, List<Integer>> constraints) {
+    public void setConstraints(Vector<Integer> constraints) {
         this.constraints = constraints;
     }
 
-    public Map<String, List<Integer>> getConstraints() {
+    public Vector<Integer> getConstraints() {
         return this.constraints;
+    }
+    
+    public Map<String, Vector<Integer>> getExampleInputs() {
+        return this.exampleInputs;
+    }
+    
+    public void setExampleInputs(Map<String, Vector<Integer>> exampleInputs) {
+        this.exampleInputs = exampleInputs;
     }
 }

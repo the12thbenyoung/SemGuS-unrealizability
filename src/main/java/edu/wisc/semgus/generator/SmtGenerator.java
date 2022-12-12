@@ -7,7 +7,7 @@ package edu.wisc.semgus.generator;
 import java.util.Set;
 import java.util.Vector;
 
-import edu.wisc.semgus.semirings.LinearSet;
+import edu.wisc.semgus.fixedpoint.LinearSet;
 
 public interface SmtGenerator {
     boolean checkSat(Vector<Integer> spec, Set<LinearSet> start);

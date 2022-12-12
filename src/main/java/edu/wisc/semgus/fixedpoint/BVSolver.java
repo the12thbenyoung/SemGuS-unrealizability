@@ -1,3 +1,6 @@
+/* Modified from implementation of Nay. Artifacts at
+ * https://dl.acm.org/do/10.1145/3395631/full/
+ */
 package edu.wisc.semgus.fixedpoint;
 
 import edu.wisc.semgus.utilities.Equation;
@@ -127,6 +130,8 @@ public class BVSolver {
                 if(modified_var.contains(expr.var))
                     return true;
                 return false;
+            case OTIMES:
+            case OPLUS:
             case BOOL:
                 return id_modified_expr(expr.left,modified_var) || id_modified_expr(expr.right,modified_var);
             case NOT:
@@ -140,6 +145,7 @@ public class BVSolver {
     private static Expression EqToBEq(Expression eq, Map<String, Set<LinearSet>> assignment) {
         Expression result = new Expression();
         switch (eq.type){
+            case CONST:
             case VAR:
                 return eq;
             case OTIMES:

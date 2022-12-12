@@ -14,7 +14,6 @@ public class App
 {
     public static void main( String[] args ) throws IOException, CVC5ApiException
     {
-        SemgusParser parser = new SemgusParser();
-        System.out.println(parser.grammarEqsFromSL("parser/test_grammar.json").getNonterminalEquations().get(2));
+        SLMain.main(args);
     }
 }

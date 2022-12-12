@@ -1,3 +1,6 @@
+/* Modified from implementation of Nay. Artifacts at
+ * https://dl.acm.org/do/10.1145/3395631/full/
+ */
 package edu.wisc.semgus.fixedpoint;
 
 import edu.wisc.semgus.utilities.Expression;
@@ -202,6 +205,7 @@ public class IteFixedPointSolver {
                 resultExpr.var = exp.var+toBitString(bv);
                 resultSet.add(new Pair<>(exp.var,bv));
                 break;
+            case OTIMES:
             case OPLUS:
                 resultExpr.type = exp.type;
                 tmpLeft = projection_Expression(exp.left,bv);
@@ -263,9 +267,11 @@ public class IteFixedPointSolver {
         Pair<Set<Pair<String,Vector<Boolean>>>,Expression> tmpLeft;
         Pair<Set<Pair<String,Vector<Boolean>>>,Expression> tmpRight;
         switch (exp.type){
+            case CONST:
             case VAR:
                 resultExpr = exp;
                 break;
+            case OTIMES:
             case OPLUS:
                 resultExpr.type = exp.type;
                 tmpLeft = expandIte(exp.left);
@@ -477,6 +483,7 @@ public class IteFixedPointSolver {
             case VAR:
                 result.add(expr.var);
                 return result;
+            case OTIMES:
             case OPLUS:
                 result.addAll(find_expr_vars(expr.left));
                 result.addAll(find_expr_vars(expr.right));
