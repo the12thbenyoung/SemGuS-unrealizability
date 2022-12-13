@@ -47,7 +47,6 @@ public class IteFixedPointSolver {
                                         .filter(i -> valEqs.get(i).type == EqType.BOOL)
                                         .mapToObj(i -> valEqs.get(i).left).collect(Collectors.toList());
 
-
             Map<Integer, Map<String, Set<Vector<Boolean>>>> bvStore = new HashMap<>();
             Map<String, Set<Vector<Boolean>>> initBV = new HashMap<>();
             for (String boolName : boolNames) {
@@ -83,10 +82,6 @@ public class IteFixedPointSolver {
                 //System.out.println("Newton Start");
                 Map<String, Set<LinearSet>> currentSolution = Newton.SolveSlEq(valEqsNoIte, (map.values().iterator().next()).size(), rhs_var_set);
 
-                for(String key: currentSolution.keySet()){
-
-                   // System.out.println("\t"+key+" : "+currentSolution.get(key).size());
-                }
                 // get the new bv map with new solution
                 //System.out.println("BVSolver Start");
                 Map<String, Set<Vector<Boolean>>> currentBV = BVSolver.SolveBV(dim, valEqs, currentSolution, bvStore.get(stage));
@@ -116,8 +111,6 @@ public class IteFixedPointSolver {
                 stage++;
                 totalStage++;
                 bvStore.put(stage, currentBV);
-
-                // TODO check if the current solution reach a fixed point
             }
             if(opt)
                 currentEq = dag.popRoot();

@@ -153,13 +153,13 @@ public class SmtCvc5Generator implements edu.wisc.semgus.generator.SmtGenerator 
         List<Vector<Integer>> period_list_y = new ArrayList<>(right.getPeriod());
 
         for(int ix = 0; ix < left.getPeriod().size(); ix++ ) {
-            Term var = solver.mkVar(intSort, "x_"+ix+"_"+"d");
+            Term var = solver.mkConst(intSort, "x_"+ix+"_"+"d");
             boundList_X.add(var);
             solver.assertFormula(solver.mkTerm(Kind.GEQ, var, zero));
         }
 
         for(int iy = 0; iy < right.getPeriod().size(); iy++  ){
-            Term var = solver.mkVar(intSort, "y_"+iy+"_"+"d");
+            Term var = solver.mkConst(intSort, "y_"+iy+"_"+"d");
             boundList_Y.add(var);
             solver.assertFormula(solver.mkTerm(Kind.GEQ, var, zero));
         }

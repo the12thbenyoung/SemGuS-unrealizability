@@ -15,6 +15,8 @@ public class ParsedGrammar {
     private Map<String, Vector<Integer>> exampleInputs;
     // expected output of each example
     private Vector<Integer> constraints;
+    // starting nonterminal
+    public String startingNT;
 
     public void setNonterminalEquations(List<Equation> nonterminalEquations) {
         this.nonterminalEquations = nonterminalEquations;

@@ -36,6 +36,8 @@ public class SemgusParser {
     Vector<String> inputVarNames;
     // Expect outputs for each example
     Vector<Integer> constraints;
+    // starting nonterminal
+    String startingNT;
 
     ProdSemanticsGenerator semGenerator;
     ObjectMapper objectMapper;
@@ -124,6 +126,7 @@ public class SemgusParser {
         grammar.setNonterminalEquations(new ArrayList<Equation>(ntEquations.values()));
         grammar.setConstraints(constraints);
         grammar.setExampleInputs(exampleInputs);
+        grammar.startingNT = startingNT;
         
         return grammar;
     }
@@ -140,8 +143,8 @@ public class SemgusParser {
         for (Production production : grammar.productions) {
             // name of nonterminal
             String nt = production.instance;
-            // name of operator. get rid of "__agtt" that gets appended when default background grammar is used
-            String op = production.operator.replace("__agtt", "");
+            // name of operator 
+            String op = production.operator;
             EqType type = universeNTTypes.get(parentNTs.get(nt));
             Expression newExp;
             if (type == EqType.INT) {
@@ -171,7 +174,7 @@ public class SemgusParser {
     private void parseConstraint(JsonNode node) {
         ArrayNode array = (ArrayNode) node.get("constraint").get("arguments");
         // name of nt
-        String nt = array.get(0).get("returnSort").asText();
+        this.startingNT = array.get(0).get("returnSort").asText();
 
         // first size-1 arguments are inputs, last is expected output
         for (int i = 1; i < array.size()-1; i++) {

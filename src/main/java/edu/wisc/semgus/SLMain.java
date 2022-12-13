@@ -16,12 +16,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import javax.lang.model.util.ElementScanner6;
+
 public class SLMain {
     public static void main(String args[]) throws IOException, CVC5ApiException {
-	// read arguments
-	// input file path
-        String path = args[0];
-
 	// with or without optimization
         if(args.length>1 && args[1].equals("noOpt")) {
             Newton.opt = false;
@@ -39,12 +37,10 @@ public class SLMain {
 
         SemgusParser parser = new SemgusParser();
 
-    // Run parser on semgus .sl file to produce json
-    // must have semgus-parser executable in folder project-root/parser
-    // Runtime.getRuntime().exec(String.format("parser/semgus-parser --format json --mode batch %s > tmp/parsed_semgus.json", args[0]));
-    
-	// build the term equations
-    ParsedGrammar grammar = parser.grammarEqsFromSL("tmp/parsed_semgus.json");
+	// build the term equations from json
+    // ParsedGrammar grammar = parser.grammarEqsFromSL(args[0]);
+    ParsedGrammar grammar = parser.grammarEqsFromSL("benchmarks/example-realizable/example-realizable.json");
+    // ParsedGrammar grammar = parser.grammarEqsFromSL("tmp/parsed_semgus.json");
     List<Equation> termEqs = grammar.getNonterminalEquations();
     Map<String, Vector<Integer>> inputExMap = grammar.getExampleInputs();
     Vector<Integer> spec = grammar.getConstraints();
@@ -62,17 +58,30 @@ public class SLMain {
 	// solve the semi-linear set
         Map<String,Set<LinearSet>> solution =  IteFixedPointSolver.SolveIteFixedPoint(termEqs,inputExMap);
         
+        String startingNT;
+        // assume starting nonterminal is either S or @S__agtt or "Start" (for custom semantics)
+        if (solution.keySet().contains(grammar.startingNT))
+            startingNT = grammar.startingNT;
+        else if (solution.keySet().contains("@" + grammar.startingNT + "__agtt"))
+            startingNT = "@" + grammar.startingNT + "__agtt";
+        else if (solution.keySet().contains("Start"))
+            startingNT = "Start";
+        else if (solution.keySet().contains("start"))
+            startingNT = "start";
+        else
+            throw new RuntimeException("Improper root/starting nonterminal");
+        
         System.out.println(solution);
 
         float endTime_sl = System.nanoTime();
         float timeElapsed_sl = endTime_sl - startTime_sl;
 	
 	// parse solution and dump result
-        int solutionSize = solution.get("Start").size();
+        int solutionSize = solution.get(startingNT).size();
 
         float avgPeriod = 0;
         int periodCount = 0;
-        for(LinearSet ls:solution.get("Start")){
+        for(LinearSet ls:solution.get(startingNT)){
             if(avgPeriod == 0)
                 avgPeriod = ls.getPeriod().size();
             avgPeriod = avgPeriod*periodCount+ls.getPeriod().size();
@@ -84,7 +93,7 @@ public class SLMain {
         System.setOut(original);
 
         float startTime_smt = System.nanoTime();
-        Boolean result = SMTQGenerator.checkSat(spec,solution.get("Start"));
+        Boolean result = SMTQGenerator.checkSat(spec,solution.get(startingNT));
 
         System.out.println(result);
 
