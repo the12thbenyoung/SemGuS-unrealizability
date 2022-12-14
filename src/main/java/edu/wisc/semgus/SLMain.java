@@ -38,9 +38,8 @@ public class SLMain {
         SemgusParser parser = new SemgusParser();
 
 	// build the term equations from json
-    // ParsedGrammar grammar = parser.grammarEqsFromSL(args[0]);
-    ParsedGrammar grammar = parser.grammarEqsFromSL("benchmarks/example-realizable/example-realizable.json");
-    // ParsedGrammar grammar = parser.grammarEqsFromSL("tmp/parsed_semgus.json");
+    ParsedGrammar grammar = parser.grammarEqsFromSL(args[0]);
+    // ParsedGrammar grammar = parser.grammarEqsFromSL("benchmarks/clia-unequiv-sem/sample/sample.json");
     List<Equation> termEqs = grammar.getNonterminalEquations();
     Map<String, Vector<Integer>> inputExMap = grammar.getExampleInputs();
     Vector<Integer> spec = grammar.getConstraints();
@@ -70,8 +69,6 @@ public class SLMain {
             startingNT = "start";
         else
             throw new RuntimeException("Improper root/starting nonterminal");
-        
-        System.out.println(solution);
 
         float endTime_sl = System.nanoTime();
         float timeElapsed_sl = endTime_sl - startTime_sl;
