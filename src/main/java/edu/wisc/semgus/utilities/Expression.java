@@ -66,6 +66,7 @@ public class Expression<E> {
             exp.left = new Expression<Integer>(occurrences[1]);
             exp.right = new Expression<Integer>(occurrences[2]);
         } else {
+            System.out.println("Unable to match semantics of integer-valued production " + op + " with CLIA");
             throw new RuntimeException("Unable to match semantics of integer-valued production " + op + " with CLIA");
         }
 
@@ -117,6 +118,7 @@ public class Expression<E> {
             exp.right = new Expression<Integer>(occurrences[1]);
         }
         else {
+            System.out.println("Unable to match semantics of boolean-valued production " + op + " with CLIA");
             throw new RuntimeException("Unable to match semantics of boolean-valued production " + op + " with CLIA");
         }
 

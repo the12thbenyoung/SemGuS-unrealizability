@@ -1,5 +1,5 @@
 ;;;;
-;;;; plus2times3-exp.sl - The plus2times3 example problem encoded in SemGuS
+;;;; max2-exp.sl - The max2 example problem encoded in SemGuS
 ;;;;
 
 ;;; Metadata
@@ -22,6 +22,7 @@
         ($1)
         ($+ E E)
         ($ite B E E)
+        ($/ E E)
     )
     (  ; B productions
         ($not B)
@@ -45,6 +46,12 @@
        (($x (= r x))
         ($0 (= r 0))
         ($1 (= r 1))
+        (($/ et1 et2)
+         (exists ((r1 Int) (r2 Int))
+            (and
+             (E.Sem et1 x r1)
+             (E.Sem et2 x r2)
+             (= r1 (* r r2)))))
         (($+ et1 et2)
          (exists ((r1 Int) (r2 Int))
              (and
@@ -96,17 +103,17 @@
 ;;;
 ;;; Function to synthesize - a term rooted at E
 ;;;
-(synth-fun plus2times3() E) ; Using the default universe of terms rooted at E
+(synth-fun max2() E) ; Using the default universe of terms rooted at E
 
 ;;;
 ;;; Constraints - examples
 ;;;
-(constraint (E.Sem plus2times3 1 9))
-(constraint (E.Sem plus2times3 2 12))
-(constraint (E.Sem plus2times3 3 15))
-(constraint (E.Sem plus2times3 4 18))
+(constraint (E.Sem max2 1 9))
+(constraint (E.Sem max2 2 12))
+(constraint (E.Sem max2 3 15))
+(constraint (E.Sem max2 4 18))
 
 ;;;
-;;; Instruct the solver to find plus2times3
+;;; Instruct the solver to find max2
 ;;;
 (check-synth)

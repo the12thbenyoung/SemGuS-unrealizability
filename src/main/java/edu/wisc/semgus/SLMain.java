@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.lang.model.util.ElementScanner6;
-
 public class SLMain {
     public static void main(String args[]) throws IOException, CVC5ApiException {
 	// with or without optimization
@@ -43,9 +41,9 @@ public class SLMain {
     List<Equation> termEqs = grammar.getNonterminalEquations();
     Map<String, Vector<Integer>> inputExMap = grammar.getExampleInputs();
     Vector<Integer> spec = grammar.getConstraints();
-    System.out.println(inputExMap);
-    System.out.println(spec);
-    System.out.println(termEqs);
+    // System.out.println(inputExMap);
+    // System.out.println(spec);
+    // System.out.println(termEqs);
 
     PrintStream original = System.out;
 	
@@ -91,11 +89,16 @@ public class SLMain {
 
         float startTime_smt = System.nanoTime();
         Boolean result = SMTQGenerator.checkSat(spec,solution.get(startingNT));
-
-        System.out.println(result);
-
         float endTime_smt = System.nanoTime();
         float timeElapsed_smt = endTime_smt - startTime_smt;
+
+        System.out.println(String.format("SLS generating time: %.3f", timeElapsed_sl/1000000000));
+        System.out.println(String.format("SLS membership check time: %.3f", timeElapsed_smt/1000000000));
+        System.out.println(String.format("Total Time: %.3f", (timeElapsed_sl + timeElapsed_smt)/1000000000));
+        System.out.println("Solution size: " + solutionSize);
+
+        System.out.println(result? "Realizable" : "Unrealizable");
+
         // System.out.print(String.format ("%.2f",(timeElapsed_smt/1000000000))
         // + " & "+String.format ("%.2f",((timeElapsed_sl+timeElapsed_smt)/1000000000))+" & "+result+"\\\\");
     }

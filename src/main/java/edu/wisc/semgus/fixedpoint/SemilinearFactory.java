@@ -42,19 +42,12 @@ public class SemilinearFactory {
 
         Set<LinearSet> result = new HashSet<>();
 
-        long startTime = System.nanoTime();
         for(LinearSet lsLeft: left){
             for(LinearSet lsRight: right){
                 result.add(lsLeft.dicSum(lsRight));
             }
         }
-        long endTime = System.nanoTime();
-        long timeElapsed = endTime - startTime;
         dotCount++;
-        if(timeElapsed / 1000000>1000){
-            System.out.println("Dot Size: "+left.size()+" "+right.size()+" "+result.size()+" dot count: "+dotCount+" Execution time in milliseconds : " +
-                timeElapsed / 1000000);
-        }
 
         return result;
     }

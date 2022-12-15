@@ -1,11 +1,10 @@
 ;;;;
-;;;; max3-exp.sl - The max3 example problem encoded in SemGuS
-;;;;
+;;;; stolen from https://github.com/SemGuS-git/Semgus-Benchmarks/blob/master/integer-arithmetic/doublegt-exp.sl
 
 ;;; Metadata
-(set-info :format-version "2.1.0")
-(set-info :author("Jinwoo Kim" "Keith Johnson" "Wiley Corning"))
-(set-info :realizable true)
+;; (set-info :format-version "2.1.0")
+;; (set-info :author("Jinwoo Kim" "Keith Johnson" "Wiley Corning"))
+;; (set-info :realizable true)
 
 ;;;
 ;;; Term types
@@ -23,10 +22,8 @@
         ($ite B E E)
     )
     (  ; B productions
-        ($not B)
         ($and B B)
-        ($or B B)
-        ($< E E)
+        ($>= E E)
     )
 )
 )
@@ -60,48 +57,32 @@
     :input (x y z) :output (r))
 
    (! (match bt ; B.Sem definitions
-        ((($not bt1)
-          (exists ((rb Bool))
-              (and
-               (B.Sem bt1 x y z rb)
-               (= r(not rb)))))
-         (($and bt1 bt2)
+         ((($and bt1 bt2)
           (exists ((rb1 Bool) (rb2 Bool))
               (and
                (B.Sem bt1 x y z rb1)
                (B.Sem bt2 x y z rb2)
-               (= r(and rb1 rb2)))))
-         (($or bt1 bt2)
-          (exists ((rb1 Bool) (rb2 Bool))
-              (and
-               (B.Sem bt1 x y z rb1)
-               (B.Sem bt2 x y z rb2)
-               (= r(or rb1 rb2)))))
-         (($< et1 et2)
+               (= r (not (or (not rb1) (not rb2)))))))
+         (($>= et1 et2)
           (exists ((r1 Int) (r2 Int))
               (and
                (E.Sem et1 x y z r1)
                (E.Sem et2 x y z r2)
-               (= r(< r1 r2)))))))
+               (= r(>= r1 r2)))))))
     :input (x y z) :output (r))))
 
 
 ;;;
 ;;; Function to synthesize - a term rooted at E
 ;;;
-(synth-fun max3 () E) ; Using the default universe of terms rooted at E
+(synth-fun doublegt() E)
 
 ;;;
 ;;; Constraints - examples
+;;; if x geq y and x geq z then x, else y
 ;;;
-(constraint (E.Sem max3 4 2 1 4))
-(constraint (E.Sem max3 2 5 7 7))
-(constraint (E.Sem max3 2 3 2 3))
-;; (constraint (E.Sem max3 0 0 0 0))
-;; (constraint (E.Sem max3 2 8 3 8))
+(constraint (E.Sem doublegt 3 2 1 3))
+(constraint (E.Sem doublegt 5 4 0 5))
+(constraint (E.Sem doublegt 7 8 3 8))
 
-
-;;;
-;;; Instruct the solver to find max3
-;;;
 (check-synth)

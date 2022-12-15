@@ -1,0 +1,5 @@
+SLS generating time: 12.893
+SLS membership check time: 257.195
+Total Time: 270.088
+Solution size: 9072
+Realizable
