@@ -1,4 +1,4 @@
-This is an unrealizability and semantic equivalence prover for [SemGuS](semgus.org) problems in the theory of conditional integer linear arithmetic (CLIA).
+This is an unrealizability and semantic equivalence prover for [SemGuS](http://semgus.org) problems in the theory of conditional integer linear arithmetic (CLIA).
 
 Requires local dependencies `lib/cvc5-1.0.2.jar` and `lib/libz3-4.8.8.jar`, which can be obtained from [here](https://cvc5.github.io/docs/cvc5-1.0.2/installation/installation.html) and [here](https://mvnrepository.com/artifact/com.microsoft.z3/libz3.java.linux/4.8.8), respectively.
 
