@@ -1,5 +1,3 @@
-;;;;
-;;;; stolen from https://github.com/SemGuS-git/Semgus-Benchmarks/blob/master/integer-arithmetic/eq1-exp.sl
 
 ;;; Metadata
 ;; (set-info :format-version "2.1.0")
@@ -18,8 +16,11 @@
     ( ; E productions
         ($x)
         ($y)
+        ($z)
         ($0)
         ($1)
+        ($2)
+        ($3)
         ($+ E E)
         ($ite B E E)
     )
@@ -45,8 +46,11 @@
   ((! (match et ; E.Sem definitions
        (($x (= r x))
         ($y (= r y))
+        ($z (= r z))
         ($0 (= r 0))
         ($1 (= r 1))
+        ($2 (= r 2))
+        ($3 (= r 3))
         (($+ et1 et2)
          (exists ((r1 Int) (r2 Int))
              (and
@@ -99,20 +103,17 @@
 ;;; Function to synthesize - a term rooted at E
 ;;;
 (synth-fun eq1() E
-    ((Start E) (C E) (B E) (StartBool B)) (
+    ((Start E) (StartBool B)) (
         (Start E (
-            $1 
-            ($+ Start Start)
-            ($ite StartBool B C)
-        ))
-        (B E (
-            $2
-        ))
-        (C E (
             $x
+            $y
+            $z
+            $2
+            ($+ Start Start)
+            ($ite StartBool Start Start)
         ))
         (StartBool B (
-            ($>= B C)
+            ($and StartBool StartBool)            
         ))
     )
 )
@@ -120,7 +121,7 @@
 ;;;
 ;;; Constraints - examples
 ;;;
-(constraint (E.Sem eq1 0 4 0 1))
-(constraint (E.Sem eq1 3 5 0 3))
+(constraint (E.Sem eq1 5 2 3 1))
+(constraint (E.Sem eq1 4 5 3 3))
 
 (check-synth)

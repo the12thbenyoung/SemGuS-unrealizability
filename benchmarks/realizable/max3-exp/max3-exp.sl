@@ -19,14 +19,16 @@
     ( ; E productions
         ($x)
         ($y)
-        ($z)
+        ($0)
+        ($1)
+        ($+ E E)
         ($ite B E E)
     )
     (  ; B productions
         ($not B)
         ($and B B)
         ($or B B)
-        ($< E E)
+        ($>= E E)
     )
 )
 )
@@ -36,6 +38,7 @@
 ;;;
 (define-funs-rec
     ;; CHC heads
+    ; Add (unused) argument z
     ((E.Sem ((et E) (x Int) (y Int) (z Int) (r Int)) Bool)
      (B.Sem ((bt B) (x Int) (y Int) (z Int) (r Bool)) Bool))
 
@@ -43,7 +46,14 @@
   ((! (match et ; E.Sem definitions
        (($x (= r x))
         ($y (= r y))
-        ($z (= r z))
+        ($0 (= r 0))
+        ($1 (= r 1))
+        (($+ et1 et2)
+         (exists ((r1 Int) (r2 Int))
+             (and
+              (E.Sem et1 x y z r1)
+              (E.Sem et2 x y z r2)
+              (= r (+ r1 r2)))))
         (($ite t1 t2 t3)
             (exists ((b Bool)) (and
                 (B.Sem t1 x y z b)
@@ -77,12 +87,12 @@
                (B.Sem bt1 x y z rb1)
                (B.Sem bt2 x y z rb2)
                (= r(or rb1 rb2)))))
-         (($< et1 et2)
+         (($>= et1 et2)
           (exists ((r1 Int) (r2 Int))
               (and
                (E.Sem et1 x y z r1)
                (E.Sem et2 x y z r2)
-               (= r(< r1 r2)))))))
+               (= r(>= r1 r2)))))))
     :input (x y z) :output (r))))
 
 

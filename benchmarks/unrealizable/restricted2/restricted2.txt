@@ -1,0 +1,5 @@
+SLS generating time: 0.000
+SLS membership check time: 0.025
+Total Time: 0.025
+Solution size: 9
+Unrealizable
